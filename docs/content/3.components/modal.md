@@ -304,13 +304,13 @@ slots:
 
 ### Programmatic usage
 
-You can use the [`useModal`](/composables/use-modal) composable to open a Modal programatically.
+You can use the [`useModal`](/composables/use-modal) composable to open a Modal programmatically.
 
 ::warning
 Make sure to wrap your app with the [`App`](/components/app) component which uses the [`ModalProvider`](https://github.com/nuxt/ui/blob/v3/src/runtime/components/ModalProvider.vue) component.
 ::
 
-First, create a modal component that will be opened programatically:
+First, create a modal component that will be opened programmatically:
 
 ::component-example
 ---

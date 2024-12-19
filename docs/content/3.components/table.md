@@ -303,7 +303,7 @@ class: '!p-0'
 ::
 
 ::note
-In this example, we use a function to define the column header but you can also create an actual component.
+In this example, we use a function to define the column header, but you can also create an actual component.
 ::
 
 ### With column pinning

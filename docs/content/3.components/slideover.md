@@ -303,13 +303,13 @@ slots:
 
 ### Programmatic usage
 
-You can use the [`useSlideover`](/composables/use-slideover) composable to open a Slideover programatically.
+You can use the [`useSlideover`](/composables/use-slideover) composable to open a Slideover programmatically.
 
 ::warning
 Make sure to wrap your app with the [`App`](/components/app) component which uses the [`SlideoverProvider`](https://github.com/nuxt/ui/blob/v3/src/runtime/components/SlideoverProvider.vue) component.
 ::
 
-First, create a slideover component that will be opened programatically:
+First, create a slideover component that will be opened programmatically:
 
 ::component-example
 ---
