@@ -20,6 +20,12 @@ export default (options: Required<ModuleOptions>) => ({
       false: {
         base: 'overflow-clip',
         tbody: 'divide-y divide-default'
+      },
+      true: {
+        base: 'after:inline-block after:h-(--after-height)',
+        thead: '[&>tr]:after:bg-(--ui-border-accented)',
+        tbody: '[&>tr]:after:bg-(--ui-border) [&>tr:last-child]:after:hidden',
+        tr: 'relative after:absolute after:inset-x-0 after:bottom-0 after:h-px'
       }
     },
     pinned: {

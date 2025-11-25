@@ -227,7 +227,7 @@ import { upperFirst } from 'scule'
 import { defu } from 'defu'
 import { FlexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, getExpandedRowModel, useVueTable } from '@tanstack/vue-table'
 import { useVirtualizer } from '@tanstack/vue-virtual'
-import { reactiveOmit, createReusableTemplate } from '@vueuse/core'
+import { reactiveOmit, createReusableTemplate, useElementSize } from '@vueuse/core'
 import { useAppConfig } from '#imports'
 import { useLocale } from '../composables/useLocale'
 import { tv } from '../utils/tv'
@@ -272,14 +272,13 @@ function processColumns(columns: TableColumn<T>[]): TableColumn<T>[] {
 }
 
 const ui = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.table || {}) })({
-  sticky: props.virtualize ? false : props.sticky,
+  sticky: props.sticky,
   loading: props.loading,
   loadingColor: props.loadingColor,
   loadingAnimation: props.loadingAnimation,
   virtualize: !!props.virtualize
 }))
 
-const [DefineTableTemplate, ReuseTableTemplate] = createReusableTemplate()
 const [DefineRowTemplate, ReuseRowTemplate] = createReusableTemplate<{ row: TableRow<T>, style?: Record<string, string> }>({
   props: {
     row: {
@@ -325,6 +324,7 @@ const paginationState = defineModel<PaginationState>('pagination', { default: {}
 
 const rootRef = useTemplateRef<ComponentPublicInstance>('rootRef')
 const tableRef = useTemplateRef<HTMLTableElement>('tableRef')
+const tableBodyRef = useTemplateRef<HTMLTableSectionElement>('tableBodyRef')
 
 const tableApi = useVueTable({
   ...reactiveOmit(props, 'as', 'data', 'columns', 'virtualize', 'caption', 'sticky', 'loading', 'loadingColor', 'loadingAnimation', 'class', 'ui'),
@@ -436,6 +436,18 @@ const renderedSize = computed(() => {
 
   // Sum up the actual sizes of virtual items
   return virtualItems.reduce((sum: number, item: any) => sum + item.size, 0)
+})
+
+const { height: tableBodyHeight } = useElementSize(tableBodyRef)
+const tableStyle = computed(() => {
+  if (!virtualizer) {
+    return {}
+  }
+
+  const tableAfterHeight = virtualizer.value.getTotalSize() - tableBodyHeight.value
+  return {
+    '--after-height': `${tableAfterHeight}px`
+  }
 })
 
 function valueUpdater<T extends Updater<any>>(updaterOrValue: T, ref: Ref) {
@@ -558,15 +570,20 @@ defineExpose({
       </td>
     </tr>
 
-    <tr v-if="row.getIsExpanded()" data-slot="tr" :class="ui.tr({ class: [props.ui?.tr] })">
+    <tr
+      v-if="row.getIsExpanded()"
+      data-slot="tr"
+      :class="ui.tr({ class: [props.ui?.tr] })"
+      :style="style?.transform && { transform: style.transform }"
+    >
       <td :colspan="row.getAllCells().length" data-slot="td" :class="ui.td({ class: [props.ui?.td] })">
         <slot name="expanded" :row="row" />
       </td>
     </tr>
   </DefineRowTemplate>
 
-  <DefineTableTemplate>
-    <table ref="tableRef" data-slot="base" :class="ui.base({ class: [props.ui?.base] })">
+  <Primitive ref="rootRef" :as="as" v-bind="$attrs" data-slot="root" :class="ui.root({ class: [props.ui?.root, props.class] })">
+    <table ref="tableRef" data-slot="base" :class="ui.base({ class: [props.ui?.base] })" :style="tableStyle">
       <caption v-if="caption || !!slots.caption" data-slot="caption" :class="ui.caption({ class: [props.ui?.caption] })">
         <slot name="caption">
           {{ caption }}
@@ -601,10 +618,10 @@ defineExpose({
           </th>
         </tr>
 
-        <tr data-slot="separator" :class="ui.separator({ class: [props.ui?.separator] })" />
+        <tr v-if="!virtualizer" data-slot="separator" :class="ui.separator({ class: [props.ui?.separator] })" />
       </thead>
 
-      <tbody data-slot="tbody" :class="ui.tbody({ class: [props.ui?.tbody] })">
+      <tbody ref="tableBodyRef" data-slot="tbody" :class="ui.tbody({ class: [props.ui?.tbody] })">
         <slot name="body-top" />
 
         <template v-if="rows.length">
@@ -679,17 +696,5 @@ defineExpose({
         </tr>
       </tfoot>
     </table>
-  </DefineTableTemplate>
-
-  <Primitive ref="rootRef" :as="as" v-bind="$attrs" data-slot="root" :class="ui.root({ class: [props.ui?.root, props.class] })">
-    <div
-      v-if="virtualizer"
-      :style="{
-        height: `${virtualizer.getTotalSize()}px`
-      }"
-    >
-      <ReuseTableTemplate />
-    </div>
-    <ReuseTableTemplate v-else />
   </Primitive>
 </template>
